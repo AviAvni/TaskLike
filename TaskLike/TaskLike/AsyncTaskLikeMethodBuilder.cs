@@ -52,6 +52,8 @@ namespace TaskLike
                 if (!_stack.Contains(lla)) _stack.Push(lla);
                 else return;
 
+                lla.Reset();
+
                 while (!lla.MoveNext())
                 {
                     lla.UnsafeOnCompleted(stateMachine.MoveNext);
@@ -63,8 +65,6 @@ namespace TaskLike
                 }
 
                 _stack.Pop();
-                if (_stack.Count > 0)
-                    lla.Reset();
                 return;
             }
             //_methodBuilder.AwaitUnsafeOnCompleted(ref awaiter, ref stateMachine);

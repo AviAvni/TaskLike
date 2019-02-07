@@ -27,8 +27,8 @@ namespace TaskLike
         {
             var i = await list;
             var j = await list1;
-            Console.WriteLine($"{i}, {j}");
             //await Task.Delay(1000);
+            Console.WriteLine($"{i}, {j}");
             return i * 10 + j;
         }
     }
