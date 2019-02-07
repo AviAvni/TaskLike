@@ -52,21 +52,28 @@ namespace TaskLike
                 if (!_stack.Contains(lla)) _stack.Push(lla);
                 else return;
 
-                lla.Reset();
-
                 while (!lla.MoveNext())
                 {
-                    lla.UnsafeOnCompleted(stateMachine.MoveNext);
                     var field = stateMachine.GetType().GetFields()[0];
-                    while ((int)field.GetValue(stateMachine) != -2)
+                    lla.UnsafeOnCompleted(stateMachine.MoveNext);
+                    var times =
+#if DEBUG 
+                        -2;
+#else
+                        _stack.Count - 1;
+#endif
+                    while ((int)field.GetValue(stateMachine) != times)
                     {
                         lla.UnsafeOnCompleted(stateMachine.MoveNext);
                     }
                 }
 
                 _stack.Pop();
+                if (_stack.Count > 0)
+                    lla.Reset();
                 return;
             }
+
             //_methodBuilder.AwaitUnsafeOnCompleted(ref awaiter, ref stateMachine);
         }
     }

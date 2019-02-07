@@ -12,6 +12,7 @@ namespace TaskLike
         internal ListLikeAwaiter(IEnumerable<TResult> value)
         {
             _source = value;
+            _value = _source.GetEnumerator();
         }
 
         public bool IsCompleted { get; private set; }
