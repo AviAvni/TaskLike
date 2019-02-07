@@ -1,0 +1,48 @@
+﻿using System;
+using System.Collections.Generic;
+using System.Runtime.CompilerServices;
+
+namespace TaskLike
+{
+    public class ListLikeAwaiter<TResult> : ICriticalNotifyCompletion
+    {
+        private readonly IEnumerable<TResult> _source;
+        private IEnumerator<TResult> _value;
+
+        internal ListLikeAwaiter(IEnumerable<TResult> value)
+        {
+            _source = value;
+            _value = value.GetEnumerator();
+        }
+
+        public bool IsCompleted { get; private set; }
+
+        public TResult GetResult()
+        {
+            return _value.Current;
+        }
+
+        public bool MoveNext()
+        {
+            IsCompleted = !_value.MoveNext();
+            return IsCompleted;
+        }
+
+        public void Reset()
+        {
+            _value = _source.GetEnumerator();
+            IsCompleted = false;
+        }
+
+        public void OnCompleted(Action continuation)
+        {
+            continuation();
+        }
+
+        public void UnsafeOnCompleted(Action continuation)
+        {
+            continuation();
+        }
+    }
+
+}
