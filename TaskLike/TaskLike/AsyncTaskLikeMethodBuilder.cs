@@ -1,8 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.Runtime.CompilerServices;
-using System.Runtime.InteropServices;
 using System.Security;
 
 namespace TaskLike
@@ -12,7 +10,6 @@ namespace TaskLike
         public static AsyncTaskLikeMethodBuilder<TResult> Create() =>
             new AsyncTaskLikeMethodBuilder<TResult>();
 
-        private AsyncTaskMethodBuilder<TResult> _methodBuilder = AsyncTaskMethodBuilder<TResult>.Create();
         private Stack<ListLikeAwaiter<TResult>> _stack = new Stack<ListLikeAwaiter<TResult>>();
 
         public TaskLike<TResult> Task { get; } = new TaskLike<TResult>(new List<TResult>());
@@ -38,7 +35,9 @@ namespace TaskLike
             where TAwaiter : INotifyCompletion
             where TStateMachine : IAsyncStateMachine
         {
-            awaiter.OnCompleted(stateMachine.MoveNext);
+            // Doesn't seem to be used under normal circumstances
+
+            // awaiter.OnCompleted(stateMachine.MoveNext);
         }
 
 
@@ -47,34 +46,32 @@ namespace TaskLike
             where TAwaiter : ICriticalNotifyCompletion
             where TStateMachine : IAsyncStateMachine
         {
-            if (awaiter is ListLikeAwaiter<TResult> lla)
-            {
-                if (!_stack.Contains(lla)) _stack.Push(lla);
-                else return;
+            if (!(awaiter is ListLikeAwaiter<TResult> lla)) return;
 
-                while (!lla.MoveNext())
-                {
-                    var field = stateMachine.GetType().GetFields()[0];
-                    lla.UnsafeOnCompleted(stateMachine.MoveNext);
-                    var times =
-#if DEBUG 
+            if (_stack.Contains(lla)) return;
+
+            _stack.Push(lla);
+
+            while (!lla.MoveNext())
+            {
+                var field = stateMachine.GetType().GetFields()[0];
+                stateMachine.MoveNext();
+
+                var times =
+#if DEBUG
                         -2;
 #else
                         _stack.Count - 1;
 #endif
-                    while ((int)field.GetValue(stateMachine) != times)
-                    {
-                        lla.UnsafeOnCompleted(stateMachine.MoveNext);
-                    }
-                }
 
-                _stack.Pop();
-                if (_stack.Count > 0)
-                    lla.Reset();
-                return;
+                while ((int)field.GetValue(stateMachine) != times)
+                    stateMachine.MoveNext();
             }
 
-            //_methodBuilder.AwaitUnsafeOnCompleted(ref awaiter, ref stateMachine);
+            _stack.Pop();
+
+            if (_stack.Count > 0)
+                lla.Reset();
         }
     }
 }
