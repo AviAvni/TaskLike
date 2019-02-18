@@ -51,27 +51,37 @@ namespace TaskLike
             if (_stack.Contains(lla)) return;
 
             _stack.Push(lla);
+            if (_stack.Count > 1)
+                lla.MoveNext();
 
-            while (!lla.MoveNext())
+            if (_stack.Count > 1) return;
+
+            var st = stateMachine;
+            var field = st.GetType().GetFields()[0];
+            var times = -2;
+
+            lla.UnsafeOnCompleted(() =>
             {
-                var field = stateMachine.GetType().GetFields()[0];
-                stateMachine.MoveNext();
+                while (_stack.Count > 0)
+                {
+                    while (!lla.MoveNext())
+                    {
+                        st.MoveNext();
 
-                var times =
-#if DEBUG
-                        -2;
-#else
-                        _stack.Count - 1;
-#endif
+                        while ((int)field.GetValue(st) != times)
+                            st.MoveNext();
 
-                while ((int)field.GetValue(stateMachine) != times)
-                    stateMachine.MoveNext();
-            }
+                        lla = _stack.Peek();
+                    }
 
-            _stack.Pop();
-
-            if (_stack.Count > 0)
-                lla.Reset();
+                    _stack.Pop();
+                    if (_stack.Count > 0)
+                    {
+                        lla.Reset();
+                        lla = _stack.Peek();
+                    }
+                }
+            });
         }
     }
 }
