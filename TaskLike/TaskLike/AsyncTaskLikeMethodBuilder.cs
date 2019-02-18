@@ -51,10 +51,12 @@ namespace TaskLike
             if (_stack.Contains(lla)) return;
 
             _stack.Push(lla);
-            if (_stack.Count > 1)
-                lla.MoveNext();
 
-            if (_stack.Count > 1) return;
+            if (_stack.Count > 1)
+            {
+                lla.MoveNext();
+                return;
+            }
 
             var st = stateMachine;
             var field = st.GetType().GetFields()[0];
