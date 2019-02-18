@@ -1,5 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
+using System.Reflection;
 using System.Runtime.CompilerServices;
 using System.Security;
 
@@ -29,7 +31,7 @@ namespace TaskLike
             Task._result.Add(result);
         }
 
-        public void SetException(Exception exception) => throw exception;
+        public void SetException(Exception exception) { }
 
         public void AwaitOnCompleted<TAwaiter, TStateMachine>(ref TAwaiter awaiter, ref TStateMachine stateMachine)
             where TAwaiter : INotifyCompletion
@@ -52,38 +54,24 @@ namespace TaskLike
 
             _stack.Push(lla);
 
-            if (_stack.Count > 1)
+            var fields = stateMachine.GetType().GetFields(BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance).ToList();
+            var st = stateMachine;
+            var state = fields.Select(f => f.GetValue(st)).ToArray();
+
+            var times = _stack.Count;
+            while (!lla.MoveNext())
             {
-                lla.MoveNext();
-                return;
+                st = stateMachine;
+                fields.ForEach(f => f.SetValue(st, state[fields.IndexOf(f)]));
+                do
+                {
+                    stateMachine.MoveNext();
+                }
+                while ((int)fields[0].GetValue(stateMachine) != -2);
             }
 
-            var st = stateMachine;
-            var field = st.GetType().GetFields()[0];
-            var times = -2;
-
-            lla.UnsafeOnCompleted(() =>
-            {
-                while (_stack.Count > 0)
-                {
-                    while (!lla.MoveNext())
-                    {
-                        st.MoveNext();
-
-                        while ((int)field.GetValue(st) != times)
-                            st.MoveNext();
-
-                        lla = _stack.Peek();
-                    }
-
-                    _stack.Pop();
-                    if (_stack.Count > 0)
-                    {
-                        lla.Reset();
-                        lla = _stack.Peek();
-                    }
-                }
-            });
+            lla.Reset();
+            _stack.Pop();
         }
     }
 }
