@@ -55,12 +55,11 @@ namespace TaskLike
             _stack.Push(lla);
 
             var fields = stateMachine.GetType().GetFields(BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance).ToList();
-            var st = stateMachine;
-            var state = SaveState(fields, st);
+            var state = SaveState(fields, stateMachine);
 
             while (!lla.MoveNext())
             {
-                LoadState(fields, st, state);
+                LoadState(fields, stateMachine, state);
 
                 do
                 {
