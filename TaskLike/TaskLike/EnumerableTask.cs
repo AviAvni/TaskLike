@@ -9,14 +9,15 @@ using System.Threading.Tasks;
 namespace TaskLike
 {
     [AsyncMethodBuilder(typeof(AsyncEnumerableTaskMethodBuilder<>))]
-    public class EnumerableTask<TResult> 
+    public class EnumerableTask<TResult>
     {
-        internal readonly List<TResult> _result;
-        EnumerableTaskAwaiter<TResult> _awaiter;
+        readonly List<TResult> _result = new List<TResult>();
+        readonly EnumerableTaskAwaiter<TResult> _awaiter;
 
-        public EnumerableTask(List<TResult> result)
+        public IEnumerable<TResult> Result => _result;
+
+        public EnumerableTask()
         {
-            _result = result;
             _awaiter = new EnumerableTaskAwaiter<TResult>(this);
         }
 
@@ -25,6 +26,11 @@ namespace TaskLike
         public EnumerableTaskAwaiter<TResult> GetAwaiter()
         {
             return _awaiter;
+        }
+
+        internal void Add(TResult result)
+        {
+            _result.Add(result);
         }
     }
 }

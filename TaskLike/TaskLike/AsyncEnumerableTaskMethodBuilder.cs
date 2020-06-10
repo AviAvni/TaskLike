@@ -14,7 +14,7 @@ namespace TaskLike
 
         private Stack<EnumerableAwaiter<TResult>> _stack = new Stack<EnumerableAwaiter<TResult>>();
 
-        public EnumerableTask<TResult> Task { get; } = new EnumerableTask<TResult>(new List<TResult>());
+        public EnumerableTask<TResult> Task { get; } = new EnumerableTask<TResult>();
 
         public void Start<TStateMachine>(ref TStateMachine stateMachine)
             where TStateMachine : IAsyncStateMachine
@@ -28,7 +28,7 @@ namespace TaskLike
 
         public void SetResult(TResult result)
         {
-            Task._result.Add(result);
+            Task.Add(result);
         }
 
         public void SetException(Exception exception) { }

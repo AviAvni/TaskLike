@@ -14,7 +14,7 @@ namespace TaskLike
 
         public IEnumerable<TResult> GetResult()
         {
-            return _value._result;
+            return _value.Result;
         }
 
         public void OnCompleted(Action continuation)
