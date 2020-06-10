@@ -4,12 +4,12 @@ using System.Runtime.CompilerServices;
 
 namespace TaskLike
 {
-    public class ListLikeAwaiter<TResult> : ICriticalNotifyCompletion
+    public class EnumerableAwaiter<TResult> : ICriticalNotifyCompletion
     {
         private readonly IEnumerable<TResult> _source;
         private IEnumerator<TResult> _value;
 
-        internal ListLikeAwaiter(IEnumerable<TResult> value)
+        internal EnumerableAwaiter(IEnumerable<TResult> value)
         {
             _source = value;
             _value = _source.GetEnumerator();

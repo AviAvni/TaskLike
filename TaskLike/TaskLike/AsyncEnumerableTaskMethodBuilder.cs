@@ -7,14 +7,14 @@ using System.Security;
 
 namespace TaskLike
 {
-    public class AsyncTaskLikeMethodBuilder<TResult>
+    public class AsyncEnumerableTaskMethodBuilder<TResult>
     {
-        public static AsyncTaskLikeMethodBuilder<TResult> Create() =>
-            new AsyncTaskLikeMethodBuilder<TResult>();
+        public static AsyncEnumerableTaskMethodBuilder<TResult> Create() =>
+            new AsyncEnumerableTaskMethodBuilder<TResult>();
 
-        private Stack<ListLikeAwaiter<TResult>> _stack = new Stack<ListLikeAwaiter<TResult>>();
+        private Stack<EnumerableAwaiter<TResult>> _stack = new Stack<EnumerableAwaiter<TResult>>();
 
-        public TaskLike<TResult> Task { get; } = new TaskLike<TResult>(new List<TResult>());
+        public EnumerableTask<TResult> Task { get; } = new EnumerableTask<TResult>(new List<TResult>());
 
         public void Start<TStateMachine>(ref TStateMachine stateMachine)
             where TStateMachine : IAsyncStateMachine
@@ -48,7 +48,7 @@ namespace TaskLike
             where TAwaiter : ICriticalNotifyCompletion
             where TStateMachine : IAsyncStateMachine
         {
-            if (!(awaiter is ListLikeAwaiter<TResult> lla)) return;
+            if (!(awaiter is EnumerableAwaiter<TResult> lla)) return;
 
             if (_stack.Contains(lla)) return;
 
@@ -56,13 +56,12 @@ namespace TaskLike
 
             var fields = stateMachine.GetType().GetFields(BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance).ToList();
             var st = stateMachine;
-            var state = fields.Select(f => f.GetValue(st)).ToArray();
+            var state = SaveState(fields, st);
 
-            var times = _stack.Count;
             while (!lla.MoveNext())
             {
-                st = stateMachine;
-                fields.ForEach(f => f.SetValue(st, state[fields.IndexOf(f)]));
+                LoadState(fields, st, state);
+
                 do
                 {
                     stateMachine.MoveNext();
@@ -72,6 +71,20 @@ namespace TaskLike
 
             lla.Reset();
             _stack.Pop();
+        }
+
+        private static void LoadState<TStateMachine>(List<FieldInfo> fields, TStateMachine st, object[] state) where TStateMachine : IAsyncStateMachine
+        {
+            for (int i = 0; i < fields.Count; i++)
+            {
+                var field = fields[i];
+                field.SetValue(st, state[i]);
+            }
+        }
+
+        private static object[] SaveState<TStateMachine>(List<FieldInfo> fields, TStateMachine st) where TStateMachine : IAsyncStateMachine
+        {
+            return fields.Select(f => f.GetValue(st)).ToArray();
         }
     }
 }

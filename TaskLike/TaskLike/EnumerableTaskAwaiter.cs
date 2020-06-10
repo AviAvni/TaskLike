@@ -4,11 +4,11 @@ using System.Runtime.CompilerServices;
 
 namespace TaskLike
 {
-    public class TaskLikeAwaiter<TResult> : ICriticalNotifyCompletion
+    public class EnumerableTaskAwaiter<TResult> : ICriticalNotifyCompletion
     {
-        private readonly TaskLike<TResult> _value;
+        private readonly EnumerableTask<TResult> _value;
 
-        internal TaskLikeAwaiter(TaskLike<TResult> value) { _value = value; }
+        internal EnumerableTaskAwaiter(EnumerableTask<TResult> value) { _value = value; }
 
         public bool IsCompleted { get; private set; }
 
